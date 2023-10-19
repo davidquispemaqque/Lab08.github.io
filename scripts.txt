@@ -1,0 +1,56 @@
+CREATE DATABASE crud3;
+USE crud3;
+
+CREATE TABLE persona (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombres VARCHAR(100),
+    apellidos VARCHAR(100),
+    f_inscripcion VARCHAR(100),
+    t_menbresia varchar(100),
+    edad varchar(100),
+    celular varchar(12),
+    monto_pagar varchar(100),
+    DNI VARCHAR(8)
+);
+
+CREATE TABLE promociones (
+  id int NOT NULL AUTO_INCREMENT,
+  promocion varchar(200) DEFAULT NULL,
+  duracion varchar(200) DEFAULT NULL,
+  id_persona int NOT NULL,
+  PRIMARY KEY (id),
+  KEY fk_promociones_1_idx (id_persona),
+  CONSTRAINT fk_promociones_1 FOREIGN KEY (id_persona) REFERENCES persona (id)
+) 
+
+
+
+<?php
+if (!isset($_GET['codigo'])) {
+    header('Location: index.php?mensaje=error');
+    exit();
+}
+
+include 'model/conexion.php';
+$codigo = $_GET['codigo'];
+
+// Verificar si existen registros relacionados en la tabla 'promociones'
+$sentencia_verificar = $bd->prepare("SELECT COUNT(*) FROM promociones WHERE id_persona = ?");
+$sentencia_verificar->execute([$codigo]);
+$registros_relacionados = $sentencia_verificar->fetchColumn();
+
+if ($registros_relacionados > 0) {
+    header('Location: index.php?mensaje=error&detalle=Hay registros relacionados en la tabla "promociones"');
+    exit();
+}
+
+// Si no hay registros relacionados, procede a eliminar la fila en 'persona'
+$sentencia_eliminar = $bd->prepare("DELETE FROM persona WHERE id = ?");
+$resultado = $sentencia_eliminar->execute([$codigo]);
+
+if ($resultado === TRUE) {
+    header('Location: index.php?mensaje=eliminado');
+} else {
+    header('Location: index.php?mensaje=error&detalle=No se pudo eliminar la fila en la tabla "persona"');
+}
+?>
